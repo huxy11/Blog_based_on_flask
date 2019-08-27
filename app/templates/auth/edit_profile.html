@@ -1,0 +1,18 @@
+{% extends "base.html"%}
+{% import "bootstrap/wtf.html" as wtf%}
+
+{%block title%}Edit Profile{%endblock%}
+
+{%block page_content%}
+<div>
+	<p>Rregistration date:{{moment(current_user.member_since).format('LLL')}}</p>
+</div>
+<div class="page-header">
+	<h1>{{current_user.username}}</h1>
+</div>
+<p><a href="{{url_for('auth.change_password', username=current_user.username)}}">Change Password</a></p>
+<div class="col-md-10">
+	{{ wtf.quick_form(form)}}
+</div>
+
+{%endblock%}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{%import "bootstrap/wtf.html" as wtf %}
+
+{%block title%}Admin{%endblock%}
+
+{%block page_content%}
+<div class="page-header">
+	<h1>User Info</h1>
+</div>
+<p>
+<div>
+	{{wtf.quick_form(form)}}
+</div>
+</p>
+<p>
+<div>
+	{%if usr %}
+	<p>Name:{{ usr.username }}</p>
+	<p>ID:{{ usr.id }}</p>
+	<p>Role ID:{{ usr.role_id }}</p>
+	<p>Location:{{ usr.location }}</p>
+	<p>About Me:{{ usr.about_me }}</p>
+	<p>Member Since:{{ usr.member_since }}</p>
+	<p>Last Seen:{{ usr.last_seen }}</p>
+	<a href="{{url_for('auth.edit_user_profile', id=usr.id)}}" class="btn btn-primary">
+		Edit
+	</a>
+	{%else%}
+	No Correspondent User.
+	{% endif %}
+</div>
+</p>
+{%endblock%}
