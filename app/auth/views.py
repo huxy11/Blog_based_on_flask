@@ -112,5 +112,20 @@ def admin():
 @login_required
 @admin_required
 def edit_user_profile(id):
-    return '!!id'
-
+    form = UserProfileForm()
+    user = User.query.filter_by(id=id).first()
+    if not user:
+        flash('No correspondent user.')
+        return redirect(url_for('.admin'))
+    if form.validate_on_submit():
+        user.username = form.username.data
+        user.location = form.location.data
+        user.about_me = form.about_me.data
+        db.session.add(user)
+        db.session.commit()
+        flash('User\'s profile has been changed.')
+        return redirect(url_for('.edit_user_profile', id=id))
+    form.username.data = user.username
+    form.location.data = user.location
+    form.about_me.data = user.about_me
+    return render_template('auth/edit_user_profile.html', form=form) 

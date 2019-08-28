@@ -38,7 +38,7 @@ class AdminIdQueryForm(Form):
     submit = SubmitField('Query')
 
 class UserProfileForm(Form):
-    account = StringField('Account.', validators=[Required(), Length(1, 64), Regexp('^[A-Za-z][A-Za-z0-9_.]*$', 0, 'Username must have only letters, numbers, dots or underscores.')])
+    username = StringField('Account.', validators=[Required(), Length(1, 64), Regexp('^[A-Za-z][A-Za-z0-9_.]*$', 0, 'Username must have only letters, numbers, dots or underscores.')])
     location = StringField('Location.', validators=[Length(0,64)])
     about_me = StringField('About me.', validators=[Length(0,64)])
     submit = SubmitField('Submit')
