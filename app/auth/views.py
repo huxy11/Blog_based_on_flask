@@ -2,7 +2,7 @@ from flask import render_template, redirect, request, url_for, flash, session
 from flask_login import login_user, login_required, logout_user, current_user
 from . import auth
 from .. import db
-from ..models import User
+from ..models import User, Post
 from ..decorators import admin_required, permission_required
 from .forms import LoginForm, RegistrationForm, ChangePasswordForm, EditProfileForm, AdminIdQueryForm, UserProfileForm
 
@@ -54,7 +54,8 @@ def account(username):
     if not current_user.is_authenticated or not current_user.username == username:
         abort(404)
     else:
-        return render_template('auth/account.html')
+        posts = current_user.posts.order_by(Post.timestamp.desc()).all()
+        return render_template('auth/account.html',user=current_user._get_current_object(),posts=posts)
 
 @auth.route('/<username>/edit_profile', methods=['GET','POST'])
 @login_required

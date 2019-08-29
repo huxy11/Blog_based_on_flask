@@ -1,0 +1,17 @@
+<div>
+	<p>Registration date:{{moment(user.member_since).format('LLL')}}</p>
+	<p>Last seen at {{moment(user.last_seen).format('LLL')}}</p>
+	<p>That was {{moment(user.last_seen).fromNow(refresh=True)}}</p>
+	<p><p>
+		{% if user.location %}
+		Location:{{user.location }}
+		{% endif %}
+		</p>
+		<p>
+		{% if user.about_me %}
+		About me:{{user.about_me}}
+		{% endif %}
+		</p>
+	</p>
+</div>
+

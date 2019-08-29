@@ -5,22 +5,12 @@
 {%block page_content%}
 <div class="page-header">
 	<h1>{{current_user.username}}</h1>
-	<p>Registration date:{{moment(current_user.member_since).format('LLL')}}</p>
-	<p>Last seen at {{moment(current_user.last_seen).format('LLL')}}</p>
-	<p>That was {{moment(current_user.last_seen).fromNow(refresh=True)}}</p>
-	<p><p>
-		{% if current_user.location %}
-		Location:{{current_user.location }}
-		{% endif %}
-		</p>
-		<p>
-		{% if current_user.about_me %}
-		About me:{{current_user.about_me}}
-		{% endif %}
-		</p>
-	</p>
+</div>
+{%include '_profile.html'%}
+<div>
 	<p><a href="{{url_for('auth.edit_profile', username=current_user.username)}}">Edit Profile</a></p>
 </div>
+{%include '_posts.html'%}
 
 {%endblock%}
 

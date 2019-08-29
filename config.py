@@ -8,6 +8,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     ADMIN_NAME = 'huxy'
     ADMIN_PASSWORD = os.environ.get('FLASKY_ADMIN_PASSWORD') or 'huxy'
+    POSTS_PER_PAGE = 10
     #FLASKY_ADMIN = os.environ.get('FLASKY_ADMIN')
 
     @staticmethod
