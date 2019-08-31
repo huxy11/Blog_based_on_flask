@@ -4,6 +4,8 @@ from . import db
 from flask_login import UserMixin, AnonymousUserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import login_manager
+from markdown import markdown
+import bleach
 
 class Permissions:
     FOLLOW = 0x01
@@ -47,6 +49,12 @@ class Role(db.Model):
     def __repr__(self):
         return '<Role %r>' % self.name
 
+class Follow(db.Model):
+    __tablename__ = 'follows'
+    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key = True)
+    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key = True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
 class User(UserMixin, db.Model):
     #Setting Permissions
     def __init__(self, **kwargs):
@@ -67,8 +75,10 @@ class User(UserMixin, db.Model):
     about_me = db.Column(db.Text())
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
+    comments = db.relationship('Comment', backref='author', lazy='dynamic')
     posts = db.relationship('Post', backref='author', lazy='dynamic')
-
+    followed = db.relationship('Follow', foreign_keys=[Follow.follower_id], backref=db.backref('follower', lazy='joined'),lazy='dynamic',cascade='all, delete-orphan')
+    follower = db.relationship('Follow', foreign_keys=[Follow.followed_id], backref=db.backref('followed', lazy='joined'),lazy='dynamic',cascade='all, delete-orphan')
     def can(self, permissions):
         return self.role is not None and (self.role.permissions & permissions) == permissions
 
@@ -89,15 +99,49 @@ class User(UserMixin, db.Model):
     def ping(self):
         self.last_seen = datetime.utcnow()
         db.session.add(self)
+    
+    def is_following(self, user):
+        return self.followed.filter_by(followed_id=user.id).first() is not None
+    
+    def is_followed_by(self, user):
+        return self.follower.filter_by(follower_id=user.id).first() is not None
+
+    def follow(self, user):
+        if not self.is_following(user):
+            follow = Follow(follower=self,followed=user)
+            db.session.add(follow)
+            db.session.commit()
+    def unfollow(self, user):
+        follow = self.followed.filter_by(followed_id=user.id).first()
+        if follow:
+            db.session.delete(follow)
 
     def __repr__(self):
         return '<User %r>' % self.username
-class Post(db.Model):
-    __tablename__ = 'postst'
+
+
+class Comment(db.Model):
+    __tablename__ = 'comments'
     id = db.Column(db.Integer, primary_key=True)
+    #target_id = db.Column(db.Intger)
     body = db.Column(db.Text)
     timestamp = db.Column(db.DateTime,index=True, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+class Post(db.Model):
+    __tablename__ = 'posts'
+    id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    title = db.Column(db.String)
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        allowed_tags = ['a', 'abbr','acronym', 'b', 'blockquote', 'code', 'em', 'li', 'ol', 'pre', 'strong', 'ul', 'h1', 'h2', 'h3', 'p']
+        target.body_html = bleach.linkify(bleach.clean(markdown(value, output_format='html'), tags=allowed_tags, strip=True))
+
+db.event.listen(Post.body, 'set', Post.on_changed_body)
 
 
 

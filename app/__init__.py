@@ -3,12 +3,14 @@ from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_pagedown import PageDown
 from config import config
 
 bootstrap = Bootstrap()
 moment = Moment()
 db = SQLAlchemy()
 login_manager = LoginManager()
+pagedown = PageDown()
 login_manager.session_protection ='strong'
 #the view is a 'auth' blueprint so the login_view should be auth.login
 login_manager.login_view = 'auth.login'
@@ -30,5 +32,8 @@ def create_app(cfg):
     moment.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
+    from .models import AnonymousUser
+    login_manager.anonymous_user = AnonymousUser
+    pagedown.init_app(app)
 
     return app

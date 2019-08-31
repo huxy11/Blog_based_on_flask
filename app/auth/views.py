@@ -2,20 +2,41 @@ from flask import render_template, redirect, request, url_for, flash, session
 from flask_login import login_user, login_required, logout_user, current_user
 from . import auth
 from .. import db
-from ..models import User, Post
+from ..models import User, Comment, Post
 from ..decorators import admin_required, permission_required
-from .forms import LoginForm, RegistrationForm, ChangePasswordForm, EditProfileForm, AdminIdQueryForm, UserProfileForm
+from .forms import LoginForm, RegistrationForm, ChangePasswordForm, EditProfileForm, AdminIdQueryForm, UserProfileForm, PostForm
 
 @auth.before_app_request
 def before_request():
     if current_user.is_authenticated:
         current_user.ping()
-
+"""
 @auth.route('/admin')
 @login_required
 @admin_required
 def admin_only():
-    return "Welcom administrator!"
+    page = request.args.get('page', 1, type=int)
+    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(page, per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
+    posts = pagination.items
+    return render_template('posts.html',posts=posts,pagination=pagination)
+"""
+
+@auth.route('/admin/post', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_post():
+    form = PostForm()
+    if form.validate_on_submit():
+        title = form.title.data
+        body = form.body.data
+        author_id = current_user.id
+        post = Post(title=title, body=body, author_id=author_id)
+        db.session.add(post)
+        db.session.commit()
+        flash('Post successfully submitted.')
+        return redirect(url_for('.admin'))
+    return render_template('auth/admin_post.html', form=form)
+
 
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -54,8 +75,8 @@ def account(username):
     if not current_user.is_authenticated or not current_user.username == username:
         abort(404)
     else:
-        posts = current_user.posts.order_by(Post.timestamp.desc()).all()
-        return render_template('auth/account.html',user=current_user._get_current_object(),posts=posts)
+        comments = current_user.comments.order_by(Comment.timestamp.desc()).all()
+        return render_template('auth/account.html',user=current_user._get_current_object(),comments=comments)
 
 @auth.route('/<username>/edit_profile', methods=['GET','POST'])
 @login_required
@@ -92,7 +113,7 @@ def change_password(username):
             flash('Invalid old password')
     return render_template('auth/change_password.html', form=form)
 
-@auth.route('/admin/', methods=['GET', 'POST'])
+@auth.route('/admin', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def admin():
