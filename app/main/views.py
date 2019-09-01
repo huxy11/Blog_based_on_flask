@@ -104,4 +104,5 @@ def user(username):
     if not user:
         flash('No correspondent user.')
         return redirect('.index')
-    return render_template('user.html', user=user, Permissions=Permissions)
+    comments = user.comments.order_by(Comment.timestamp.desc()).all()
+    return render_template('user.html', user=user, Permissions=Permissions, comments=comments)
