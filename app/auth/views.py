@@ -64,6 +64,8 @@ def register():
     if form.validate_on_submit():
         new_user = User(username=form.account.data,password=form.password.data)
         db.session.add(new_user)
+        new_user.follow(new_user)
+        db.session.add(new_user)
         db.session.commit()
         flash('Registration completed.')
         return redirect(url_for('.login'))

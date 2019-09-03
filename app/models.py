@@ -45,6 +45,7 @@ class Role(db.Model):
             admin = User(username= current_app.config['ADMIN_NAME'], password=current_app.config['ADMIN_PASSWORD'])
             db.session.add(admin)
         db.session.commit()
+        print('Inserting completed.')
 
     def __repr__(self):
         return '<Role %r>' % self.name
@@ -59,12 +60,10 @@ class User(UserMixin, db.Model):
     #Setting Permissions
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
+        if self.username == current_app.config['ADMIN_NAME']:
+            self.role = Role.query.filter_by(permissions=0xff).first()
         if self.role is None:
-            if self.role is None:
-                if self.username == current_app.config['ADMIN_NAME']:
-                    self.role = Role.query.filter_by(permissions=0xff).first()
-                else:
-                    self.role = Role.query.filter_by(default=True).first()
+            self.role = Role.query.filter_by(default=True).first()
 
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key = True)
@@ -115,6 +114,15 @@ class User(UserMixin, db.Model):
         follow = self.followed.filter_by(followed_id=user.id).first()
         if follow:
             db.session.delete(follow)
+    @property
+    def followed_comments(self):
+        return Comment.query.join(Follow, Follow.followed_id == Comment.author_id).filter(Follow.follower_id == self.id)
+    @staticmethod
+    def self_follow():
+        for user in User.query.all():
+            user.follow(user)
+            db.session.add(user)
+        db.session.commit()
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -123,10 +131,17 @@ class User(UserMixin, db.Model):
 class Comment(db.Model):
     __tablename__ = 'comments'
     id = db.Column(db.Integer, primary_key=True)
-    #target_id = db.Column(db.Intger)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
     body = db.Column(db.Text)
     timestamp = db.Column(db.DateTime,index=True, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    disabled = db.Column(db.Boolean, default = False)
+    @staticmethod
+    def update_comments():
+        for comment in Comment.query.all():
+            db.session.add(comment)
+        db.session.commit()
+
 
 class Post(db.Model):
     __tablename__ = 'posts'
@@ -136,6 +151,8 @@ class Post(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    comments = db.relationship('Comment', backref='post', lazy='dynamic')
+
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
         allowed_tags = ['a', 'abbr','acronym', 'b', 'blockquote', 'code', 'em', 'li', 'ol', 'pre', 'strong', 'ul', 'h1', 'h2', 'h3', 'p']

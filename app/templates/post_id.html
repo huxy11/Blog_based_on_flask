@@ -1,4 +1,6 @@
 {%extends "base.html" %}
+{%import "bootstrap/wtf.html" as wtf%}
+{%import "_macros.html" as macros %}
 {%block title%}Huxy - Post{%endblock%}
 
 {%block page_content %}
@@ -11,7 +13,15 @@
 <div class="post-content">
 	{{post.body_html | safe}}
 </div>
+{%include '_comments.html'%}
+<div class="pagination">
+	{{macros.pagination_widget(pagination, 'main.post_id', id=post.id)}}
+</div>
 
-{%include "_posts.html"%}
+{%if current_user.is_authenticated %}
+{{wtf.quick_form(form)}}
+{%else%}
+Please log in to comment.
+{%endif%}
 
 {%endblock%}
