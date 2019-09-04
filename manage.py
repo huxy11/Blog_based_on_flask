@@ -14,9 +14,11 @@ def msc():
 
 @manager.command
 def add_admin():
-    user = User(username='huxy',passowrd='huxy')
-    db.session.add(user)
-    db.session.commit()
+    user = User.query.filter_by(username='huxy').first()
+    if not user:
+        user = User(username='huxy',password='huxy')
+        db.session.add(user)
+        db.session.commit()
     
 @manager.command
 def deploy():
