@@ -167,4 +167,6 @@ def hide_comment(id):
 def unhide_comment(id):
     return switch_comment(id, False)
 
-
+@main.route('/test')
+def _test():
+    return render_template("_index.html")

@@ -13,6 +13,20 @@ def msc():
     return dict(app = app, db = db, User = User, Role = Role, Comment = Comment, Post = Post)
 
 @manager.command
+def add_admin():
+    user = User(username='huxy',passowrd='huxy')
+    db.session.add(user)
+    db.session.commit()
+    
+@manager.command
+def deploy():
+    """Run deplovment settings."""
+    from flask_migrate import upgrade
+    upgrade()
+    Role.insert_roles()
+    User.self_follow()
+
+@manager.command
 def test():
     """Running unit tests..."""
     import unittest
